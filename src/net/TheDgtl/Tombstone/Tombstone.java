@@ -68,6 +68,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.event.server.PluginEnableEvent;
@@ -126,6 +127,7 @@ public class Tombstone extends JavaPlugin {
         pm = getServer().getPluginManager();
         
         pm.registerEvents(new eListener(), this);
+        pm.registerEvents(new dListener(), this);
         pm.registerEvents(new pListener(), this);
         pm.registerEvents(new bListener(), this);
         pm.registerEvents(new sListener(), this);
@@ -499,6 +501,47 @@ public class Tombstone extends JavaPlugin {
         if (!logEvents) return;
         log.info("[Tombstone] " + msg);
     }
+
+    @SuppressWarnings("unused")
+    private class eListener implements Listener {
+		@EventHandler(priority = EventPriority.HIGH)
+        public void onEntityExplode(EntityExplodeEvent event) {
+            if (event.isCancelled()) return;
+
+            for (Block block : event.blockList()) {
+
+                for (Iterator<TombBlock> iter = tombList.iterator(); iter.hasNext();) {
+                    TombBlock tBlock = iter.next();
+                    if (tBlock.getBlock() != null) {
+                        if (isSameBlock(block, tBlock.getBlock())) {
+                            event.setCancelled(true);
+                        }
+                    }
+                    if (tBlock.getLBlock() != null) {
+                        if (isSameBlock(block, tBlock.getLBlock())) {
+                            event.setCancelled(true);
+                        }
+                    }
+                    if (tBlock.getSign() != null) {
+                        if (isSameBlock(block, tBlock.getSign())) {
+                            event.setCancelled(true);
+                        }
+                    }
+                }
+            }
+        }
+
+        private boolean isSameBlock(Block eventBlock, Block chestBlock) {
+            Location loc = eventBlock.getLocation();
+            Location cLoc = chestBlock.getLocation();
+
+            if ((loc.getWorld().getName().compareToIgnoreCase(cLoc.getWorld().getName()) == 0) && (loc.getBlockX() == cLoc.getBlockX()) && (loc.getBlockY() == cLoc.getBlockY()) && (loc.getBlockZ() == cLoc.getBlockZ())) {
+                return true;
+            }
+
+            return false;
+        }
+    }
     
     @SuppressWarnings("unused")
     private class bListener implements Listener {
@@ -608,7 +651,7 @@ public class Tombstone extends JavaPlugin {
     }
     
     @SuppressWarnings("unused")
-    private class eListener implements Listener {
+    private class dListener implements Listener {
     	@EventHandler(priority = EventPriority.HIGHEST)
         public void onEntityDamage(EntityDamageEvent event) {
             if (event.isCancelled()) return;
